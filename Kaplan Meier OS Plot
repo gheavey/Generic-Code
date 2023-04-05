@@ -1,0 +1,15 @@
+library(survival)
+library(survminer)
+
+# Load example survival data
+data(lung)
+
+# Fit survival model and calculate survival probabilities
+fit <- survfit(Surv(time, status) ~ sex, data = lung)
+ggsurv <- ggsurvplot(fit, data = lung, palette = "Dark2")
+
+# Customize plot
+ggsurv$plot +
+  labs(title = "Kaplan-Meier Plot of Overall Survival", x = "Time (days)", y = "Survival Probability") +
+  theme_minimal()
+
