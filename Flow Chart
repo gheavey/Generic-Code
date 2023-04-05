@@ -1,0 +1,30 @@
+library(DiagrammeR)
+
+# Define node and edge styles
+node_attrs <- list(
+  style = "filled", fillcolor = "white",
+  shape = "box", fontname = "Arial",
+  fontsize = 10, fontcolor = "black",
+  height = 0.4, width = 1.5,
+  margin = 0.1, penwidth = 1.5
+)
+
+edge_attrs <- list(
+  arrowhead = "vee", arrowsize = 0.7,
+  color = "gray", penwidth = 1.5
+)
+
+# Define nodes and edges
+nodes <- create_node_df(
+  n = 6, label = c("Screening", "Enrollment", "Treatment", "Follow-up", "Withdrawal", "Analysis"),
+  attrs = node_attrs
+)
+
+edges <- create_edge_df(
+  from = c(1, 2, 3, 3, 3), to = c(2, 3, 4, 5, 6),
+  attrs = edge_attrs
+)
+
+# Create graph object and plot
+graph <- create_graph(nodes_df = nodes, edges_df = edges)
+render_graph(graph)
