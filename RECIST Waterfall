@@ -1,0 +1,43 @@
+library(dplyr)
+library(ggplot2)
+
+# Create example RECIST data
+set.seed(123)
+n <- 50
+data <- data.frame(
+  patient = rep(1:n, each = 4),
+  visit = rep(1:4, times = n),
+  diameter = c(rnorm(n, mean = 1, sd = 0.2),  # baseline
+               rnorm(n, mean = 0.8, sd = 0.2),  # week 4
+               rnorm(n, mean = 0.6, sd = 0.2),  # week 8
+               rnorm(n, mean = 0.4, sd = 0.2))  # week 12
+)
+
+# Compute best overall response by patient
+best_response <- data %>%
+  group_by(patient) %>%
+  summarize(percent_change = (min(diameter) - max(diameter)) / min(diameter) * 100,
+            response = case_when(
+              percent_change >= -30 ~ "Stable Disease",
+              percent_change < -30 ~ "Partial Response",
+              percent_change > 20 ~ "Progressive Disease",
+              TRUE ~ "Unknown"
+            ))
+
+# Compute objective response rate (ORR)
+orr <- best_response %>%
+  filter(response %in% c("Partial Response")) %>%
+  summarize(ORR = n() / n_distinct(patient) * 100)
+
+# Plot waterfall plot of best overall response
+ggplot(best_response, aes(x = patient, y = percent_change)) +
+  geom_col(aes(fill = response), width = 0.8) +
+  geom_hline(yintercept = -30, color = "red", linetype = "dashed") +
+  scale_fill_manual(values = c("gray80", "green", "red", "gray60")) +
+  coord_flip() +
+  theme_classic() +
+  labs(x = "Patient", y = "Best Overall Response (%)", title = "Waterfall Plot of Best Overall Response") +
+  guides(fill = guide_legend(reverse = TRUE))
+
+# Print ORR
+cat("Objective Response Rate: ", round(orr$ORR, 2), "%\n")
