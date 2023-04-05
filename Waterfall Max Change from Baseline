@@ -1,0 +1,27 @@
+library(ggplot2)
+library(dplyr)
+
+# Load example data
+data(mtcars)
+
+# Add columns for maximum change from baseline tumor size and RECIST data
+mtcars$max_change <- mtcars$mpg - mean(mtcars$mpg)
+mtcars$recist <- ifelse(mtcars$max_change <= -30, "PD", ifelse(mtcars$max_change < 0, "SD", ifelse(mtcars$max_change < 20, "PR", "CR")))
+
+# Define treatment dose categories
+mtcars$dose_cat <- cut(mtcars$cyl, breaks = c(0, 4, 6, 8), labels = c("Low", "Medium", "High"))
+
+# Sort data by maximum change from baseline tumor size
+mtcars_sorted <- mtcars %>% arrange(desc(max_change))
+
+# Define color palette for treatment dose
+dose_colors <- c("Low" = "#E69F00", "Medium" = "#56B4E9", "High" = "#009E73")
+
+# Plot waterfall with color by treatment dose
+ggplot(mtcars_sorted, aes(x = rownames(mtcars_sorted), y = max_change, fill = dose_cat)) +
+  geom_bar(stat = "identity", color = "black") +
+  scale_fill_manual(values = dose_colors) +
+  labs(x = "Patient ID", y = "Maximum Change from Baseline Tumor Size (mm)", title = "Waterfall Plot of Maximum Change from Baseline Tumor Size by Treatment Dose") +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(), panel.grid.minor.x = element_blank()) +
+  geom_text(aes(label = recist), hjust = -0.1, size = 3)
