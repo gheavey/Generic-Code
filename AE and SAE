@@ -1,0 +1,43 @@
+library(dplyr)
+library(ggplot2)
+
+# Create example AE and SAE data
+set.seed(123)
+n <- 100
+data <- data.frame(
+  patient = rep(1:n, each = 2),
+  event_type = rep(c("AE", "SAE"), times = n),
+  grade = sample(1:5, size = n * 2, replace = TRUE),
+  outcome = sample(c("Recovered/Resolved", "Not recovered/Not resolved", "Fatal"), size = n * 2, replace = TRUE)
+)
+
+# Compute incidence rates by event type and grade
+incidence_rates <- data %>%
+  group_by(event_type, grade) %>%
+  summarize(n_events = n(),
+            incidence_rate = n() / n_distinct(patient) * 100)
+
+# Compute outcome rates by event type and grade
+outcome_rates <- data %>%
+  group_by(event_type, grade, outcome) %>%
+  summarize(n_events = n(),
+            outcome_rate = n() / n_distinct(patient) * 100)
+
+# Plot stacked bar charts of incidence and outcome rates
+ggplot() +
+  geom_bar(data = incidence_rates, aes(x = event_type, y = incidence_rate, fill = factor(grade)), position = "stack", stat = "identity") +
+  geom_text(data = incidence_rates, aes(x = event_type, y = incidence_rate, label = paste0(round(incidence_rate, 1), "%")), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = c("#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00")) +
+  facet_grid(~event_type, scales = "free_x") +
+  theme_classic() +
+  labs(x = NULL, y = "Incidence Rate (%)", fill = "Grade", title = "Incidence Rates of AEs and SAEs by Grade") +
+  theme(legend.position = "top")
+
+ggplot() +
+  geom_bar(data = outcome_rates, aes(x = event_type, y = outcome_rate, fill = outcome), position = "stack", stat = "identity") +
+  geom_text(data = outcome_rates, aes(x = event_type, y = outcome_rate, label = paste0(round(outcome_rate, 1), "%")), position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = c("#1b9e77", "#d95f02", "#7570b3")) +
+  facet_grid(~event_type, scales = "free_x") +
+  theme_classic() +
+  labs(x = NULL, y = "Outcome Rate (%)", fill = "Outcome", title = "Outcome Rates of AEs and SAEs by Grade") +
+  theme(legend.position = "top")
